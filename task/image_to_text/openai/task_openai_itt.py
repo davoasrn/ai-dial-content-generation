@@ -15,17 +15,41 @@ def start() -> None:
         image_bytes = image_file.read()
     base64_image = base64.b64encode(image_bytes).decode('utf-8')
 
-    # TODO:
-    #  1. Create DialModelClient
-    #  2. Call client to analise image:
-    #    - try with base64 encoded format
-    #    - try with URL: https://a-z-animals.com/media/2019/11/Elephant-male-1024x535.jpg
-    #  ----------------------------------------------------------------------------------------------------------------
+    client = DialModelClient(
+        endpoint=DIAL_CHAT_COMPLETIONS_ENDPOINT,
+        deployment_name="gpt-4o",
+        api_key=API_KEY,
+    )
+
+    base64_data_url = f"data:image/png;base64,{base64_image}"
+    message_base64 = ContentedMessage(
+        role=Role.USER,
+        content=[
+            TxtContent(text="What do you see on this picture?"),
+            ImgContent(image_url=ImgUrl(url=base64_data_url)),
+        ],
+    )
+
+    print("\n📸 Analysing image via base64 encoding...")
+    response_base64 = client.get_completion(messages=[message_base64])
+    print(f"\n🤖 Model response (base64):\n{response_base64.content}")
+
     #  Note: This approach embeds the image directly in the message as base64 data URL! Here we follow the OpenAI
     #        Specification but since requests are going to the DIAL Core, we can use different models and DIAL Core
     #        will adapt them to format Gemini or Anthropic is using. In case if we go directly to
     #        the https://api.anthropic.com/v1/complete we need to follow Anthropic request Specification (the same for gemini)
-    raise NotImplementedError
+    image_url = "https://a-z-animals.com/media/2019/11/Elephant-male-1024x535.jpg"
+    message_url = ContentedMessage(
+        role=Role.USER,
+        content=[
+            TxtContent(text="What do you see on this picture?"),
+            ImgContent(image_url=ImgUrl(url=image_url)),
+        ],
+    )
+
+    print("\n🌐 Analysing image via public URL...")
+    response_url = client.get_completion(messages=[message_url])
+    print(f"\n🤖 Model response (URL):\n{response_url.content}")
 
 
 start()
